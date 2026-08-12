@@ -1,0 +1,37 @@
+name: Slack Worklog Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      days_back:
+        description: '過去何日分を取得するか'
+        required: false
+        default: '30'
+
+jobs:
+  sync:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Slack から日報を取得
+        shell: pwsh
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+        run: |
+          # このスクリプトを実行
+          $scriptPath = "scripts/get-slack-reports.ps1"
+          & $scriptPath -OutPath "worklog.json" -DaysBack ${{ github.event.inputs.days_back || '30' }}
+
+      - name: Git に commit & push
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add worklog.json
+          git commit -m "chore: update worklog.json at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" --allow-empty
+          git push
+
+      - name: デプロイ完了
+        run: |
+          Write-Host "✅ Slack データ同期完了"
+          Write-Host "📊 https://${{ github.repository_owner }}.github.io/work-log-akiyoshi/ をリロードしてください"

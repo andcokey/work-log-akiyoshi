@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>勤務時間ダッシュボード</title>
+    <style>
+        :root {
+            --bg-ground: #fafbf9;
+            --bg-surface: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --accent-normal: #2563eb;
+            --accent-overtime: #dc2626;
+            --accent-caution: #f59e0b;
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg-ground: #0f0f0f;
+                --bg-surface: #1a1a1a;
+                --text-primary: #f5f5f5;
+                --text-secondary: #9ca3af;
+                --border: #374151;
+                --accent-normal: #60a5fa;
+                --accent-overtime: #f87171;
+                --accent-caution: #fbbf24;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg-ground: #0f0f0f;
+            --bg-surface: #1a1a1a;
+            --text-primary: #f5f5f5;
+            --text-secondary: #9ca3af;
+            --border: #374151;
+            --accent-normal: #60a5fa;
+            --accent-overtime: #f87171;
+            --accent-caution: #fbbf24;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-ground);
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding: var(--spacing-xl);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--accent-normal);
+        }
+
+        .status-badge.loading {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .filter-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .filter-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="date"] {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        input[type="date"]:focus {
+            outline: 2px solid var(--accent-normal);
+            outline-offset: 2px;
+        }
+
+        button {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--accent-normal);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        button:focus {
+            outline: 2px solid var(--accent-normal);
+            outline-offset: 2px;
+        }
+
+        .sync-button {
+            background: var(--accent-normal);
+            margin-left: auto;
+        }
+
+        .table-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9375rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        thead {
+            background: var(--bg-ground);
+            border-bottom: 2px solid var(--border);
+        }
+
+        th {
+            padding: var(--spacing-md);
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-ground);
+        }
+
+        .date-cell {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .time-cell {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .overtime-cell {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .normal {
+            color: var(--text-primary);
+        }
+
+        .overtime {
+            color: var(--accent-overtime);
+        }
+
+        .flag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .flag-overtime {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--accent-overtime);
+        }
+
+        .summary-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .summary-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: var(--spacing-lg);
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--spacing-sm);
+            font-weight: 600;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .summary-unit {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+
+        .summary-value.warning {
+            color: var(--accent-caution);
+        }
+
+        .summary-value.critical {
+            color: var(--accent-overtime);
+        }
+
+        .empty-state {
+            padding: var(--spacing-xl);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .info-box {
+            background: rgba(37, 99, 235, 0.05);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 0.5rem;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: var(--spacing-lg);
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            input[type="date"],
+            button {
+                width: 100%;
+            }
+
+            .sync-button {
+                margin-left: 0;
+            }
+
+            th, td {
+                padding: var(--spacing-sm);
+                font-size: 0.8125rem;
+            }
+
+            .summary-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>勤務時間ダッシュボード</h1>
+            <span class="status-badge" id="statusBadge">準備完了</span>
+        </div>
+
+        <div class="info-box" id="infoBox">
+            最後の更新: <span id="lastUpdate">読み込み中...</span>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="startDate">開始日</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="filter-group">
+                <label for="endDate">終了日</label>
+                <input type="date" id="endDate">
+            </div>
+            <button id="applyBtn">表示</button>
+            <button id="syncBtn" class="sync-button">🔄 Slack データ更新</button>
+        </div>
+
+        <div class="table-section">
+            <div class="table-wrapper">
+                <table id="workTable">
+                    <thead>
+                        <tr>
+                            <th>日付</th>
+                            <th>曜日</th>
+                            <th>出勤</th>
+                            <th>退勤</th>
+                            <th>勤務時間</th>
+                            <th>残業</th>
+                            <th>状態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="7" class="empty-state">データを読み込み中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <div class="summary-card">
+                <div class="summary-label">合計勤務時間</div>
+                <div class="summary-value" id="totalHours">0</div>
+                <div class="summary-unit">時間</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">残業時間合計</div>
+                <div class="summary-value" id="totalOvertime">0</div>
+                <div class="summary-unit">時間</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">残業可能時間</div>
+                <div class="summary-value" id="availableOvertime">45.0</div>
+                <div class="summary-unit">時間</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let workData = [];
+
+        const REPO = "work-log-akiyoshi";
+        const GITHUB_USER = "andcokey";
+
+        function timeToMinutes(timeStr) {
+            const [h, m] = timeStr.split(":").map(Number);
+            return h * 60 + m;
+        }
+
+        function calculateWorkHours(startTime, endTime) {
+            const start = timeToMinutes(startTime);
+            const end = timeToMinutes(endTime);
+            return (end - start) / 60;
+        }
+
+        function formatTime(hours) {
+            const h = Math.floor(hours);
+            const m = Math.round((hours - h) * 60);
+            return `${h}:${m.toString().padStart(2, "0")}`;
+        }
+
+        function getDayOfWeek(dateStr) {
+            const days = ["日", "月", "火", "水", "木", "金", "土"];
+            const date = new Date(dateStr + "T00:00:00");
+            return days[date.getDay()];
+        }
+
+        // JSON データを読み込み
+        async function loadWorkData() {
+            try {
+                const response = await fetch("./worklog.json");
+                if (response.ok) {
+                    const json = await response.json();
+                    workData = json.data || [];
+                    const updated = new Date(json.lastUpdated);
+                    document.getElementById("lastUpdate").textContent =
+                        updated.toLocaleString("ja-JP");
+                    console.log("データ読み込み成功:", workData.length, "件");
+                    return true;
+                }
+            } catch (e) {
+                console.warn("JSON 読み込みエラー:", e.message);
+            }
+            document.getElementById("lastUpdate").textContent = "未読み込み";
+            return false;
+        }
+
+        function updateTable() {
+            const startDateInput = document.getElementById("startDate").value;
+            const endDateInput = document.getElementById("endDate").value;
+
+            if (!startDateInput || !endDateInput) return;
+
+            const startDate = new Date(startDateInput);
+            const endDate = new Date(endDateInput);
+
+            const filtered = workData.filter(d => {
+                const recordDate = new Date(d.date);
+                return recordDate >= startDate && recordDate <= endDate;
+            });
+
+            const tbody = document.getElementById("tableBody");
+            let totalHours = 0;
+            let totalOvertime = 0;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">該当する記録がありません</td></tr>';
+                updateSummary(0, 0);
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(record => {
+                const hours = calculateWorkHours(record.startTime, record.endTime);
+                const overtime = Math.max(0, hours - 9);
+                totalHours += hours;
+                totalOvertime += overtime;
+
+                const isOvertime = hours > 9;
+                const timeClass = isOvertime ? "overtime" : "normal";
+
+                return `
+                    <tr>
+                        <td class="date-cell">${record.date}</td>
+                        <td>(${getDayOfWeek(record.date)})</td>
+                        <td class="time-cell">${record.startTime}</td>
+                        <td class="time-cell">${record.endTime}</td>
+                        <td class="time-cell ${timeClass}">${formatTime(hours)}</td>
+                        <td class="overtime-cell ${timeClass}">${overtime > 0 ? formatTime(overtime) : "-"}</td>
+                        <td>${isOvertime ? '<span class="flag flag-overtime">残業</span>' : ""}</td>
+                    </tr>
+                `;
+            }).join("");
+
+            updateSummary(totalHours, totalOvertime);
+        }
+
+        function updateSummary(totalHours, totalOvertime) {
+            document.getElementById("totalHours").textContent = totalHours.toFixed(1);
+            document.getElementById("totalOvertime").textContent = totalOvertime.toFixed(1);
+
+            const available = 45 - totalOvertime;
+            const availableEl = document.getElementById("availableOvertime");
+            availableEl.textContent = Math.max(0, available).toFixed(1);
+
+            if (available < 0) {
+                availableEl.classList.add("critical");
+                availableEl.classList.remove("warning");
+            } else if (available < 5) {
+                availableEl.classList.add("warning");
+                availableEl.classList.remove("critical");
+            } else {
+                availableEl.classList.remove("critical", "warning");
+            }
+        }
+
+        async function triggerSync() {
+            const syncBtn = document.getElementById("syncBtn");
+            const badge = document.getElementById("statusBadge");
+
+            syncBtn.disabled = true;
+            badge.classList.add("loading");
+            badge.textContent = "同期中...";
+
+            try {
+                // GitHub Actions を手動トリガー
+                const token = prompt("GitHub Personal Access Token を入力してください:\n(settings > Developer settings > Personal access tokens)");
+                if (!token) {
+                    throw new Error("キャンセルされました");
+                }
+
+                const response = await fetch(
+                    `https://api.github.com/repos/${GITHUB_USER}/${REPO}/actions/workflows/sync-worklog.yml/dispatches`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            ref: "main",
+                            inputs: { days_back: "30" }
+                        })
+                    }
+                );
+
+                if (response.ok) {
+                    badge.textContent = "同期中 (最大30秒)...";
+                    // 2秒後にデータ再読み込みを試みる
+                    setTimeout(async () => {
+                        await loadWorkData();
+                        updateTable();
+                        badge.classList.remove("loading");
+                        badge.textContent = "準備完了";
+                        syncBtn.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error(`API エラー: ${response.status}`);
+                }
+            } catch (e) {
+                alert(`エラー: ${e.message}`);
+                badge.classList.remove("loading");
+                badge.textContent = "準備完了";
+                syncBtn.disabled = false;
+            }
+        }
+
+        // イベントリスナー
+        document.getElementById("applyBtn").addEventListener("click", updateTable);
+        document.getElementById("syncBtn").addEventListener("click", triggerSync);
+        document.getElementById("startDate").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") updateTable();
+        });
+        document.getElementById("endDate").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") updateTable();
+        });
+
+        // 初期化
+        async function initDashboard() {
+            const loaded = await loadWorkData();
+
+            if (loaded && workData.length > 0) {
+                // デフォルト日付を設定
+                const today = new Date();
+                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                document.getElementById("startDate").value = weekAgo.toISOString().split("T")[0];
+                document.getElementById("endDate").value = today.toISOString().split("T")[0];
+
+                updateTable();
+            } else {
+                document.getElementById("tableBody").innerHTML =
+                    '<tr><td colspan="7" class="empty-state">「Slack データ更新」ボタンをクリックして初期化してください</td></tr>';
+            }
+        }
+
+        initDashboard();
+    </script>
+</body>
+</html>
