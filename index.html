@@ -64,48 +64,100 @@
             margin: 0 auto;
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-lg);
-            flex-wrap: wrap;
-            gap: var(--spacing-md);
-        }
-
         h1 {
             font-size: 1.875rem;
             font-weight: 700;
+            margin-bottom: var(--spacing-lg);
             letter-spacing: -0.02em;
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 0.375rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.8125rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            background: rgba(37, 99, 235, 0.1);
-            color: var(--accent-normal);
-        }
-
-        .status-badge.loading {
-            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .filter-section {
+        .section {
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: 0.5rem;
             padding: var(--spacing-lg);
             margin-bottom: var(--spacing-lg);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: var(--spacing-md);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: 2px solid var(--accent-normal);
+            outline-offset: 2px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--accent-normal);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        button:focus {
+            outline: 2px solid var(--accent-normal);
+            outline-offset: 2px;
+        }
+
+        button.secondary {
+            background: var(--text-secondary);
+        }
+
+        button.secondary:hover {
+            background: #4b5563;
+        }
+
+        .helper-text {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-sm);
+            line-height: 1.6;
+        }
+
+        .filter-section {
             display: flex;
             gap: var(--spacing-md);
             align-items: flex-end;
@@ -140,38 +192,6 @@
         input[type="date"]:focus {
             outline: 2px solid var(--accent-normal);
             outline-offset: 2px;
-        }
-
-        button {
-            padding: var(--spacing-sm) var(--spacing-md);
-            background: var(--accent-normal);
-            color: white;
-            border: none;
-            border-radius: 0.375rem;
-            font-size: 0.9375rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        button:hover:not(:disabled) {
-            background: #1d4ed8;
-            transform: translateY(-1px);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        button:focus {
-            outline: 2px solid var(--accent-normal);
-            outline-offset: 2px;
-        }
-
-        .sync-button {
-            background: var(--accent-normal);
-            margin-left: auto;
         }
 
         .table-section {
@@ -317,6 +337,21 @@
             margin-bottom: var(--spacing-lg);
             font-size: 0.875rem;
             color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .info-box code {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.8125rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .info-box code {
+                background: rgba(255, 255, 255, 0.05);
+            }
         }
 
         @media (max-width: 768px) {
@@ -326,11 +361,6 @@
 
             h1 {
                 font-size: 1.5rem;
-            }
-
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
             }
 
             .filter-section {
@@ -347,10 +377,6 @@
                 width: 100%;
             }
 
-            .sync-button {
-                margin-left: 0;
-            }
-
             th, td {
                 padding: var(--spacing-sm);
                 font-size: 0.8125rem;
@@ -359,33 +385,54 @@
             .summary-section {
                 grid-template-columns: 1fr;
             }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>勤務時間ダッシュボード</h1>
-            <span class="status-badge" id="statusBadge">準備完了</span>
-        </div>
+        <h1>勤務時間ダッシュボード</h1>
 
-        <div class="info-box" id="infoBox">
-            最後の更新: <span id="lastUpdate">読み込み中...</span>
-        </div>
-
-        <div class="filter-section">
-            <div class="filter-group">
-                <label for="startDate">開始日</label>
-                <input type="date" id="startDate">
+        <!-- データ入力セクション -->
+        <div class="section">
+            <div class="section-title">📊 データ入力（CSV形式）</div>
+            <div class="info-box">
+                <strong>形式:</strong> <code>日付,出勤時刻,退勤時刻</code> （1行ずつ）<br>
+                例: <code>2026-08-10,09:00,18:30</code><br>
+                複数行を一度に貼り付けられます
             </div>
-            <div class="filter-group">
-                <label for="endDate">終了日</label>
-                <input type="date" id="endDate">
+            <textarea id="csvInput" placeholder="2026-08-10,09:00,18:30&#10;2026-08-09,09:00,17:30&#10;2026-08-08,08:45,21:00"></textarea>
+            <div class="button-group">
+                <button id="loadBtn">📥 データを読み込む</button>
+                <button id="clearBtn" class="secondary">🗑️ 削除</button>
+                <button id="exportBtn" class="secondary">📤 エクスポート（CSV）</button>
             </div>
-            <button id="applyBtn">表示</button>
-            <button id="syncBtn" class="sync-button">🔄 Slack データ更新</button>
         </div>
 
+        <!-- 検索セクション -->
+        <div class="section">
+            <div class="section-title">🔍 期間検索</div>
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label for="startDate">開始日</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="filter-group">
+                    <label for="endDate">終了日</label>
+                    <input type="date" id="endDate">
+                </div>
+                <button id="applyBtn">表示</button>
+            </div>
+        </div>
+
+        <!-- テーブルセクション -->
         <div class="table-section">
             <div class="table-wrapper">
                 <table id="workTable">
@@ -401,12 +448,13 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr><td colspan="7" class="empty-state">データを読み込み中...</td></tr>
+                        <tr><td colspan="7" class="empty-state">上記の CSV テキストエリアにデータを貼り付けて「読み込む」をクリックしてください</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
+        <!-- サマリーセクション -->
         <div class="summary-section">
             <div class="summary-card">
                 <div class="summary-label">合計勤務時間</div>
@@ -428,9 +476,7 @@
 
     <script>
         let workData = [];
-
-        const REPO = "work-log-akiyoshi";
-        const GITHUB_USER = "andcokey";
+        const STORAGE_KEY = "worklog_data";
 
         function timeToMinutes(timeStr) {
             const [h, m] = timeStr.split(":").map(Number);
@@ -455,31 +501,78 @@
             return days[date.getDay()];
         }
 
-        // JSON データを読み込み
-        async function loadWorkData() {
+        function loadDataFromStorage() {
             try {
-                const response = await fetch("./worklog.json");
-                if (response.ok) {
-                    const json = await response.json();
-                    workData = json.data || [];
-                    const updated = new Date(json.lastUpdated);
-                    document.getElementById("lastUpdate").textContent =
-                        updated.toLocaleString("ja-JP");
-                    console.log("データ読み込み成功:", workData.length, "件");
-                    return true;
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    workData = JSON.parse(stored);
+                    console.log("ストレージからデータ読み込み:", workData.length, "件");
                 }
             } catch (e) {
-                console.warn("JSON 読み込みエラー:", e.message);
+                console.warn("ストレージ読み込みエラー:", e);
             }
-            document.getElementById("lastUpdate").textContent = "未読み込み";
-            return false;
+        }
+
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(workData));
+                console.log("ストレージに保存:", workData.length, "件");
+            } catch (e) {
+                console.warn("ストレージ保存エラー:", e);
+            }
+        }
+
+        function loadCSV() {
+            const csv = document.getElementById("csvInput").value.trim();
+            if (!csv) {
+                alert("CSV データを入力してください");
+                return;
+            }
+
+            const lines = csv.split("\n").filter(line => line.trim());
+            const newData = [];
+            const errors = [];
+
+            lines.forEach((line, index) => {
+                const parts = line.split(",").map(p => p.trim());
+                if (parts.length !== 3) {
+                    errors.push(`行 ${index + 1}: フォーマットエラー（3項目必要）`);
+                    return;
+                }
+
+                const [date, startTime, endTime] = parts;
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                    errors.push(`行 ${index + 1}: 日付フォーマットエラー（YYYY-MM-DD）`);
+                    return;
+                }
+                if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
+                    errors.push(`行 ${index + 1}: 時刻フォーマットエラー（HH:MM）`);
+                    return;
+                }
+
+                newData.push({ date, startTime, endTime });
+            });
+
+            if (errors.length > 0) {
+                alert("エラーがあります:\n\n" + errors.join("\n"));
+                return;
+            }
+
+            workData = newData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveDataToStorage();
+            updateTable();
+            alert(`✅ ${workData.length} 件のデータを読み込みました`);
         }
 
         function updateTable() {
             const startDateInput = document.getElementById("startDate").value;
             const endDateInput = document.getElementById("endDate").value;
 
-            if (!startDateInput || !endDateInput) return;
+            if (!startDateInput || !endDateInput) {
+                document.getElementById("tableBody").innerHTML =
+                    '<tr><td colspan="7" class="empty-state">開始日と終了日を選択してください</td></tr>';
+                return;
+            }
 
             const startDate = new Date(startDateInput);
             const endDate = new Date(endDateInput);
@@ -543,60 +636,35 @@
             }
         }
 
-        async function triggerSync() {
-            const syncBtn = document.getElementById("syncBtn");
-            const badge = document.getElementById("statusBadge");
-
-            syncBtn.disabled = true;
-            badge.classList.add("loading");
-            badge.textContent = "同期中...";
-
-            try {
-                // GitHub Actions を手動トリガー
-                const token = prompt("GitHub Personal Access Token を入力してください:\n(settings > Developer settings > Personal access tokens)");
-                if (!token) {
-                    throw new Error("キャンセルされました");
-                }
-
-                const response = await fetch(
-                    `https://api.github.com/repos/${GITHUB_USER}/${REPO}/actions/workflows/sync-worklog.yml/dispatches`,
-                    {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${token}`,
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            ref: "main",
-                            inputs: { days_back: "30" }
-                        })
-                    }
-                );
-
-                if (response.ok) {
-                    badge.textContent = "同期中 (最大30秒)...";
-                    // 2秒後にデータ再読み込みを試みる
-                    setTimeout(async () => {
-                        await loadWorkData();
-                        updateTable();
-                        badge.classList.remove("loading");
-                        badge.textContent = "準備完了";
-                        syncBtn.disabled = false;
-                    }, 2000);
-                } else {
-                    throw new Error(`API エラー: ${response.status}`);
-                }
-            } catch (e) {
-                alert(`エラー: ${e.message}`);
-                badge.classList.remove("loading");
-                badge.textContent = "準備完了";
-                syncBtn.disabled = false;
+        function exportCSV() {
+            if (workData.length === 0) {
+                alert("エクスポートするデータがありません");
+                return;
             }
+
+            const csv = workData.map(d => `${d.date},${d.startTime},${d.endTime}`).join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `worklog_${new Date().toISOString().split("T")[0]}.csv`;
+            link.click();
         }
 
         // イベントリスナー
+        document.getElementById("loadBtn").addEventListener("click", loadCSV);
         document.getElementById("applyBtn").addEventListener("click", updateTable);
-        document.getElementById("syncBtn").addEventListener("click", triggerSync);
+        document.getElementById("clearBtn").addEventListener("click", () => {
+            if (confirm("すべてのデータを削除しますか？")) {
+                workData = [];
+                saveDataToStorage();
+                document.getElementById("csvInput").value = "";
+                document.getElementById("tableBody").innerHTML =
+                    '<tr><td colspan="7" class="empty-state">データがありません</td></tr>';
+                updateSummary(0, 0);
+            }
+        });
+        document.getElementById("exportBtn").addEventListener("click", exportCSV);
+
         document.getElementById("startDate").addEventListener("keypress", (e) => {
             if (e.key === "Enter") updateTable();
         });
@@ -605,21 +673,14 @@
         });
 
         // 初期化
-        async function initDashboard() {
-            const loaded = await loadWorkData();
+        function initDashboard() {
+            loadDataFromStorage();
 
-            if (loaded && workData.length > 0) {
-                // デフォルト日付を設定
-                const today = new Date();
-                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                document.getElementById("startDate").value = weekAgo.toISOString().split("T")[0];
-                document.getElementById("endDate").value = today.toISOString().split("T")[0];
-
-                updateTable();
-            } else {
-                document.getElementById("tableBody").innerHTML =
-                    '<tr><td colspan="7" class="empty-state">「Slack データ更新」ボタンをクリックして初期化してください</td></tr>';
-            }
+            // デフォルト日付を設定
+            const today = new Date();
+            const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+            document.getElementById("startDate").value = monthAgo.toISOString().split("T")[0];
+            document.getElementById("endDate").value = today.toISOString().split("T")[0];
         }
 
         initDashboard();
