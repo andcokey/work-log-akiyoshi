@@ -416,7 +416,7 @@
             <div class="info-box">
                 <strong>形式:</strong> <code>日付,出勤時刻,退勤時刻</code> / <code>日付,出勤時刻,</code> / <code>日付,skipped</code> （1行ずつ）<br>
                 例: <code>2026-08-10,09:00,18:30</code> / <code>2026-08-09,12:31,</code> / <code>2026-08-08,skipped</code><br>
-                複数行を一度に貼り付けられます。末尾が空は出勤のみ、skipped は日報を送り忘れた日です。
+                複数行を一度に貼り付けられます。末尾が空は退勤投稿忘れ、skipped は日報を送り忘れた日です。
             </div>
             <textarea id="csvInput" placeholder="2026-08-10,09:00,18:30&#10;2026-08-09,12:31,&#10;2026-08-08,skipped"></textarea>
             <div class="button-group">
@@ -662,7 +662,7 @@
                             <td class="time-cell">-</td>
                             <td class="time-cell">-</td>
                             <td class="overtime-cell">-</td>
-                            <td><span class="flag flag-checkin-only">出勤のみ</span></td>
+                            <td><span class="flag flag-checkin-only">退勤忘れ</span></td>
                         </tr>
                     `;
                 }
