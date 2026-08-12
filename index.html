@@ -284,6 +284,11 @@
             color: #a855f7;
         }
 
+        .flag-checkin-only {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
         .summary-section {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -409,11 +414,11 @@
         <div class="section">
             <div class="section-title">📊 データ入力（CSV形式）</div>
             <div class="info-box">
-                <strong>形式:</strong> <code>日付,出勤時刻,退勤時刻</code> または <code>日付,skipped</code> （1行ずつ）<br>
-                例: <code>2026-08-10,09:00,18:30</code> / <code>2026-08-09,skipped</code><br>
-                複数行を一度に貼り付けられます。skipped は日報を送り忘れた日です。
+                <strong>形式:</strong> <code>日付,出勤時刻,退勤時刻</code> / <code>日付,出勤時刻,</code> / <code>日付,skipped</code> （1行ずつ）<br>
+                例: <code>2026-08-10,09:00,18:30</code> / <code>2026-08-09,12:31,</code> / <code>2026-08-08,skipped</code><br>
+                複数行を一度に貼り付けられます。末尾が空は出勤のみ、skipped は日報を送り忘れた日です。
             </div>
-            <textarea id="csvInput" placeholder="2026-08-10,09:00,18:30&#10;2026-08-09,skipped&#10;2026-08-08,08:45,21:00"></textarea>
+            <textarea id="csvInput" placeholder="2026-08-10,09:00,18:30&#10;2026-08-09,12:31,&#10;2026-08-08,skipped"></textarea>
             <div class="button-group">
                 <button id="loadBtn">📥 データを読み込む</button>
                 <button id="clearBtn" class="secondary">🗑️ 削除</button>
@@ -513,8 +518,14 @@
                     workData = JSON.parse(stored);
                     // 既存データ（type フィールドなし）との互換性保持
                     workData = workData.map(d => {
-                        if (!d.type && d.startTime && d.endTime) {
-                            d.type = "work";
+                        if (!d.type) {
+                            if (d.startTime && d.endTime) {
+                                d.type = "work";
+                            } else if (d.startTime && !d.endTime) {
+                                d.type = "checkin-only";
+                            } else {
+                                d.type = "skipped";
+                            }
                         }
                         return d;
                     });
@@ -546,32 +557,44 @@
             const errors = [];
 
             lines.forEach((line, index) => {
-                const parts = line.split(",").map(p => p.trim());
+                const parts = line.split(",");
+                // trim は全要素に、ただし空フィールドは保持
+                const date = parts[0]?.trim();
+                const field2 = parts[1]?.trim();
+                const field3 = parts[2]?.trim();
 
-                const date = parts[0];
-                if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
                     errors.push(`行 ${index + 1}: 日付フォーマットエラー（YYYY-MM-DD）`);
                     return;
                 }
 
                 // skipped形式: 日付,skipped
-                if (parts.length === 2 && parts[1].toLowerCase() === "skipped") {
+                if (parts.length === 2 && field2?.toLowerCase() === "skipped") {
                     newData.push({ date, type: "skipped" });
                     return;
                 }
 
-                // work形式: 日付,出勤時刻,退勤時刻
-                if (parts.length === 3) {
-                    const [, startTime, endTime] = parts;
-                    if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
+                // checkin-only形式: 日付,出勤時刻,（末尾が空）
+                if (parts.length === 3 && field2 && !field3) {
+                    if (!/^\d{2}:\d{2}$/.test(field2)) {
                         errors.push(`行 ${index + 1}: 時刻フォーマットエラー（HH:MM）`);
                         return;
                     }
-                    newData.push({ date, startTime, endTime, type: "work" });
+                    newData.push({ date, startTime: field2, type: "checkin-only" });
                     return;
                 }
 
-                errors.push(`行 ${index + 1}: フォーマットエラー（日付,出勤,退勤 または 日付,skipped）`);
+                // work形式: 日付,出勤時刻,退勤時刻
+                if (parts.length === 3 && field2 && field3) {
+                    if (!/^\d{2}:\d{2}$/.test(field2) || !/^\d{2}:\d{2}$/.test(field3)) {
+                        errors.push(`行 ${index + 1}: 時刻フォーマットエラー（HH:MM）`);
+                        return;
+                    }
+                    newData.push({ date, startTime: field2, endTime: field3, type: "work" });
+                    return;
+                }
+
+                errors.push(`行 ${index + 1}: フォーマットエラー（日付,出勤,退勤 または 日付,出勤, または 日付,skipped）`);
             });
 
             if (errors.length > 0) {
@@ -629,6 +652,21 @@
                     `;
                 }
 
+                // checkin-only型の処理
+                if (record.type === "checkin-only") {
+                    return `
+                        <tr>
+                            <td class="date-cell">${record.date}</td>
+                            <td>(${getDayOfWeek(record.date)})</td>
+                            <td class="time-cell">${record.startTime}</td>
+                            <td class="time-cell">-</td>
+                            <td class="time-cell">-</td>
+                            <td class="overtime-cell">-</td>
+                            <td><span class="flag flag-checkin-only">出勤のみ</span></td>
+                        </tr>
+                    `;
+                }
+
                 // work型の処理
                 const hours = calculateWorkHours(record.startTime, record.endTime);
                 const overtime = Math.max(0, hours - 9);
@@ -682,6 +720,9 @@
             const csv = workData.map(d => {
                 if (d.type === "skipped") {
                     return `${d.date},skipped`;
+                }
+                if (d.type === "checkin-only") {
+                    return `${d.date},${d.startTime},`;
                 }
                 return `${d.date},${d.startTime},${d.endTime}`;
             }).join("\n");
